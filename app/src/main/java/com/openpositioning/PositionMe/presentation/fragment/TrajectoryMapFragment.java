@@ -1,6 +1,10 @@
 package com.openpositioning.PositionMe.presentation.fragment;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -52,6 +56,50 @@ import java.util.List;
  */
 
 public class TrajectoryMapFragment extends Fragment {
+    private Bitmap makePinWithNumber(@NonNull String text) {
+        int w = 110, h = 160; // 尺寸，可调整
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Color.RED);
+
+        // 圆头
+        float cx = w / 2f;
+        float cy = h * 0.42f;
+        float r  = w * 0.32f;
+        c.drawCircle(cx, cy, r, p);
+
+        // 尖尾（三角形）
+        Path path = new Path();
+        path.moveTo(cx, h * 0.98f);
+        path.lineTo(cx - r * 0.55f, cy + r * 0.55f);
+        path.lineTo(cx + r * 0.55f, cy + r * 0.55f);
+        path.close();
+        c.drawPath(path, p);
+
+        // 白色内圈
+        Paint inner = new Paint(Paint.ANTI_ALIAS_FLAG);
+        inner.setColor(Color.WHITE);
+        c.drawCircle(cx, cy, r * 0.72f, inner);
+
+        // 数字
+        Paint t = new Paint(Paint.ANTI_ALIAS_FLAG);
+        t.setColor(Color.BLACK);
+        t.setTextAlign(Paint.Align.CENTER);
+        t.setTextSize(40f);
+        t.setFakeBoldText(true);
+        Paint.FontMetrics fm = t.getFontMetrics();
+        float ty = cy - (fm.ascent + fm.descent) / 2f;
+        c.drawText(text, cx, ty, t);
+
+        return bmp;
+    }
+
+
+
+
+
 
     private GoogleMap gMap; // Google Maps instance
     private LatLng currentLocation; // Stores the user's current location
@@ -537,5 +585,14 @@ public class TrajectoryMapFragment extends Fragment {
         Log.d("TrajectoryMapFragment", "Building polygon added, vertex count: " + buildingPolygon.getPoints().size());
     }
 
+    public void addMarkerAt(@NonNull LatLng latLng, @NonNull String number) {
+        if (gMap == null) return;
 
+        Bitmap icon = makePinWithNumber(number);
+
+        gMap.addMarker(new MarkerOptions()
+                .position(latLng)
+                .icon(BitmapDescriptorFactory.fromBitmap(icon))
+                .anchor(0.5f, 0.5f));
+        }
 }

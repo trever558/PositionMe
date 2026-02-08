@@ -18,6 +18,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.android.material.button.MaterialButton;
 
 import androidx.annotation.NonNull;
@@ -76,6 +78,9 @@ public class RecordingFragment extends Fragment {
     private float distance = 0f;
     private float previousPosX = 0f;
     private float previousPosY = 0f;
+
+    private LatLng lastGnssLocation = null;
+    private int markerIndex=0;
 
     // References to the child map fragment
     private TrajectoryMapFragment trajectoryMapFragment;
@@ -209,7 +214,28 @@ public class RecordingFragment extends Fragment {
             // No set time limit, just keep refreshing
             refreshDataHandler.post(refreshDataTask);
         }
+
+        view.findViewById(R.id.btn_drop_marker).setOnClickListener(v -> {
+            // 1) 获取当前位置（你项目里可能来自 GNSS / SensorFusion）
+
+
+            if (lastGnssLocation == null) {
+                Toast.makeText(requireContext(), "当前位置不可用", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (trajectoryMapFragment == null) {
+                Toast.makeText(requireContext(), "地图未就绪", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            markerIndex++;
+            String indexText = String.valueOf(markerIndex);
+            // 3) 让地图去加 marker
+            trajectoryMapFragment.addMarkerAt(lastGnssLocation, indexText);
+        });
     }
+
+
 
     /**
      * Update the UI with sensor data and pass map updates to TrajectoryMapFragment.
@@ -250,6 +276,7 @@ public class RecordingFragment extends Fragment {
         float[] gnss = sensorFusion.getSensorValueMap().get(SensorTypes.GNSSLATLONG);
         if (gnss != null && trajectoryMapFragment != null) {
             // If user toggles showing GNSS in the map, call e.g.
+            lastGnssLocation=new LatLng(gnss[0],gnss[1]);
             if (trajectoryMapFragment.isGnssEnabled()) {
                 LatLng gnssLocation = new LatLng(gnss[0], gnss[1]);
                 LatLng currentLoc = trajectoryMapFragment.getCurrentLocation();
