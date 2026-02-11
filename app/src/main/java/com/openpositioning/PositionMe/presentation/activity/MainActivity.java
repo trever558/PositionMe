@@ -58,7 +58,7 @@ import java.util.Objects;
  * @see SensorFusion the singletion data processing class.
  *
  * @author Mate Stodulka
- * @author Virginia Cangelosi
+ * @author Virginia Cangelosi_check
  */
 public class MainActivity extends AppCompatActivity implements Observer {
 
